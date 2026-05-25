@@ -151,6 +151,82 @@ public:
 
 static fakeLauncherStatics1 fbridge_launcherstatics;
 
+class __declspec(uuid("{22111111-1111-1111-1111-111111111111}")) fakeActivateFactory1 : public IActivationFactory
+{
+public:
+    STDMETHODIMP QueryInterface(
+    _In_ REFIID riid, 
+    _Out_ void** ppv)
+    {
+        if (NULL == ppv)
+            return E_POINTER;
+        if ((IID_IUnknown == riid)
+            || (__uuidof(IActivationFactory) == riid)
+            || (__uuidof(IInspectable) == riid) || (__uuidof(IAgileObject) == riid))
+        {
+            AddRef();
+            *ppv = (IActivationFactory*)(this);
+            return S_OK;
+        }
+
+        return E_NOINTERFACE;
+    };
+
+    STDMETHODIMP_(ULONG) AddRef(void) 
+    { 
+        return 1; 
+    };
+
+    STDMETHODIMP_(ULONG) Release(void) 
+    { 
+        return 1; 
+    };
+
+    STDMETHODIMP HRESULT GetIids(
+        _Out_ ULONG* iidCount,
+        _Out_ IID** iids) 
+    {
+        IID *Array;
+	    ULONG Count;
+
+    	Count = 1;
+    
+    	Array = (IID *) CoTaskMemAlloc(Count * sizeof(IID));
+    	if (!Array) {
+    		return E_OUTOFMEMORY;
+    	}
+    	Array[0] = IID_IActivationFactory;
+        
+    	*iidCount = Count;
+        *iids = Array;
+    
+    	return S_OK;
+    };
+
+    STDMETHODIMP HRESULT GetRuntimeClassName(
+        _Out_ HSTRING* className)
+    {
+        PCWSTR Name = L"IActivationFactory";
+	    return WindowsCreateString(Name, (ULONG) wcslen(Name), ClassName);
+    };
+
+    STDMETHODIMP HRESULT GetTrustLevel(
+        _Out_ TrustLevel* trustLevel) 
+    {
+        *trustLevel = BaseTrust;
+        return S_OK;
+    };
+
+    STDMETHODIMP HRESULT ActivateInstance(
+        _Out_ IInspectable** instance)
+    {
+        *instance = (IInspectable *) this;
+        return S_OK;
+    }
+};
+
+fakeActivateFactory1 fbridge_factory;
+
 namespace YY::Thunks
 {
 #if (YY_Thunks_Target < __WindowsNT6_2)
@@ -219,11 +295,10 @@ namespace YY::Thunks
         {
             return pRoActivateInstance(activatableClassId, instance);
         }
+        
+        *instance = (IInspectable *) &fbridge_factory;
 
-        if (instance)
-            *instance = nullptr;
-
-        return E_NOTIMPL;
+        return S_OK;
     }
 #endif
 
