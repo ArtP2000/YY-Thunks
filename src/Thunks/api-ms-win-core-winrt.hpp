@@ -42,15 +42,9 @@ public:
         return E_NOINTERFACE;
     };
 
-    STDMETHODIMP_(ULONG) AddRef(void) 
-    { 
-        return 1; 
-    };
+    STDMETHODIMP_(ULONG) AddRef(void) { return 1; };
     
-    STDMETHODIMP_(ULONG) Release(void) 
-    { 
-        return 1; 
-    };
+    STDMETHODIMP_(ULONG) Release(void) { return 1; };
 
     STDMETHODIMP HRESULT GetIids(
         _Out_ ULONG* iidCount,
@@ -155,8 +149,8 @@ class __declspec(uuid("{22111111-1111-1111-1111-111111111111}")) fakeActivateFac
 {
 public:
     STDMETHODIMP QueryInterface(
-    _In_ REFIID riid, 
-    _Out_ void** ppv)
+        _In_ REFIID riid, 
+        _Out_ void** ppv)
     {
         if (NULL == ppv)
             return E_POINTER;
@@ -172,15 +166,9 @@ public:
         return E_NOINTERFACE;
     };
 
-    STDMETHODIMP_(ULONG) AddRef(void) 
-    { 
-        return 1; 
-    };
+    STDMETHODIMP_(ULONG) AddRef(void) { return 1; };
 
-    STDMETHODIMP_(ULONG) Release(void) 
-    { 
-        return 1; 
-    };
+    STDMETHODIMP_(ULONG) Release(void) { return 1; };
 
     STDMETHODIMP HRESULT GetIids(
         _Out_ ULONG* iidCount,
@@ -203,29 +191,94 @@ public:
     	return S_OK;
     };
 
-    STDMETHODIMP HRESULT GetRuntimeClassName(
-        _Out_ HSTRING* className)
-    {
+    STDMETHODIMP HRESULT GetRuntimeClassName(_Out_ HSTRING* className) {
         PCWSTR Name = L"IActivationFactory";
 	    return WindowsCreateString(Name, (ULONG) wcslen(Name), ClassName);
     };
 
-    STDMETHODIMP HRESULT GetTrustLevel(
-        _Out_ TrustLevel* trustLevel) 
-    {
-        *trustLevel = BaseTrust;
-        return S_OK;
-    };
+    STDMETHODIMP HRESULT GetTrustLevel(_Out_ TrustLevel* trustLevel) { *trustLevel = BaseTrust; return S_OK; };
 
-    STDMETHODIMP HRESULT ActivateInstance(
-        _Out_ IInspectable** instance)
-    {
-        *instance = (IInspectable *) this;
+    STDMETHODIMP HRESULT ActivateInstance(_Out_ IInspectable** instance) {
+        if (instance) *instance = nullptr;
         return S_OK;
     }
 };
 
-fakeActivateFactory1 fbridge_factory;
+static fakeActivateFactory1 fbridge_factory;
+
+MIDL_INTERFACE("c63657f6-8850-470d-88f8-455e16ea2c26")
+IUIViewSettings : public IInspectable
+{
+public:
+virtual HRESULT STDMETHODCALLTYPE get_UserInteractionMode(void* value) = 0;
+};
+
+class __declspec(uuid("{33111111-1111-1111-1111-111111111111}")) fakeUiViewSettings : public IUIViewSettings
+{
+    STDMETHODIMP QueryInterface(
+        _In_ REFIID riid, 
+        _Out_ void** ppv)
+    {
+        *ppv = nullptr;
+        if (IsEqualIID(RefIID, &IID_IUnknown) ||
+		IsEqualIID(RefIID, &IID_IAgileObject) ||
+		IsEqualIID(RefIID, &IID_IInspectable) ||
+		IsEqualIID(RefIID, &IID_IUIViewSettings)) {
+		*Interface = this;
+		return S_OK;
+        }
+
+        return E_NOINTERFACE;
+    };
+
+    STDMETHODIMP_(ULONG) AddRef(void)
+    {
+    	return 1;
+    }
+
+    STDMETHODIMP_(ULONG) Release(void)
+    {
+    	return 1;
+    }
+
+    STDMETHODIMP HRESULT GetIids(
+        _Out_ ULONG* iidCount,
+        _Out_ IID** iids) 
+    {
+        IID *Array;
+	    ULONG Count;
+
+    	Count = 1;
+    
+    	Array = (IID *) CoTaskMemAlloc(Count * sizeof(IID));
+    	if (!Array) {
+    		return E_OUTOFMEMORY;
+    	}
+    	Array[0] = IID_IActivationFactory;
+        
+    	*iidCount = Count;
+        *iids = Array;
+    
+    	return S_OK;
+    };
+
+    STDMETHODIMP HRESULT GetRuntimeClassName(_Out_ HSTRING* className) {
+        PCWSTR Name = L"Windows.UI.ViewManagement.UISettings";
+	    return WindowsCreateString(Name, (ULONG) wcslen(Name), ClassName);
+    };
+
+    STDMETHODIMP HRESULT GetTrustLevel(_Out_ TrustLevel* trustLevel) { *trustLevel = BaseTrust; return S_OK; };
+
+    STDMETHODIMP HRESULT get_UserInteractionMode(
+	    _Out_	UserInteractionMode	*InteractionMode)
+    {
+	    *InteractionMode = UserInteractionMode_Mouse;
+	    return S_OK;
+    }
+
+};
+
+static fakeUiViewSettings fbridge_uiviewsettings;
 
 namespace YY::Thunks
 {
