@@ -9,6 +9,145 @@
 #pragma comment(lib, "Ole32.lib")
 #endif
 
+MIDL_INTERFACE("277151C3-9E3E-42F6-91A4-5DFDEB232451")
+    ILauncherStatics : public IInspectable
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE TreatAsUntrusted(boolean * value) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LaunchFileAsync(void* file,boolean** operation) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LaunchFileWithOptionsAsync(void* file, void* options, boolean** operation) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LaunchUriAsync(void* uri, boolean** operation) = 0;
+    virtual HRESULT STDMETHODCALLTYPE LaunchUriWithOptionsAsync(void* uri, void* options, boolean** operation) = 0;
+};
+
+class __declspec(uuid("{44111111-1111-1111-1111-111111111111}")) fakeLauncherStatics1 : public ILauncherStatics
+{
+public:
+    STDMETHODIMP QueryInterface(
+        _In_ REFIID riid, 
+        _Out_ void** ppv)
+    {
+        if (NULL == ppv)
+            return E_POINTER;
+        if ((IID_IUnknown == riid)
+            || (__uuidof(ILauncherStatics) == riid)
+            || (__uuidof(IInspectable) == riid) || (__uuidof(IAgileObject) == riid))
+        {
+            AddRef();
+            *ppv = (fakeShellBridge1*)(&fbridge1);
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    };
+
+    STDMETHODIMP_(ULONG) AddRef(void) 
+    { 
+        return 1; 
+    };
+    
+    STDMETHODIMP_(ULONG) Release(void) 
+    { 
+        return 1; 
+    };
+
+    STDMETHODIMP_(HRESULT) GetIids(
+        _Out_ ULONG* iidCount,
+        _Out_ IID** iids) 
+    {
+        IID *Array;
+    	ULONG Count;
+    
+        Count = 1;
+    
+    	Array = (IID *) CoTaskMemAlloc(Count * sizeof(IID));
+    	if (!Array) {
+    		return E_OUTOFMEMORY;
+    	}
+    
+    	*iidCount = Count;
+    	Array[0] = __uuidof(ILauncherStatics);
+    
+    	return S_OK;
+    };
+
+    STDMETHODIMP_(HRESULT) GetRuntimeClassName(
+        _Out_ HSTRING* className)
+    {
+        PCWSTR Name = L"Windows.System.Launcher";
+        return WindowsCreateString(Name, (ULONG) wcslen(Name), className);
+    };
+
+    STDMETHODIMP_(HRESULT) GetTrustLevel(
+        _Out_ TrustLevel* trustLevel) 
+    {
+        *trustLevel = BaseTrust;
+        return S_OK;
+    };
+
+    STDMETHODIMP_(HRESULT) TreatAsUntrusted(
+        boolean* value)
+    {
+        return 7;
+    };
+
+    STDMETHODIMP_(HRESULT) LaunchFileAsync(
+        _In_ IUnknown* file, 
+        _Out_ IAsyncOperation** operation)
+    {
+        return E_NOTIMPL;
+    };
+
+    STDMETHODIMP_(HRESULT) LaunchFileWithOptionsAsync(
+        _In_ IUnknown* file, 
+        _In_ IUnknown* options, 
+        _Out_ IAsyncOperation** operation)
+    {
+        return LaunchFileAsync(file, operation);
+    };
+
+    STDMETHODIMP_(HRESULT) LaunchUriAsync(
+        _In_    IUriRuntimeClass*   uri, 
+        _Out_   IAsyncOperation**   operation)
+    {
+        HRESULT Result;
+	    HSTRING RawUri;
+	    HINSTANCE ShellExecuteResult;
+        
+        Result = Uri->lpVtbl->get_AbsoluteUri(uri, &RawUri);
+	    if (FAILED(Result)) {
+		    return Result;
+	    }
+
+	    ShellExecuteResult = ShellExecute(
+		    NULL,
+		    L"open",
+		    WindowsGetStringRawBuffer(RawUri, NULL),
+		    NULL,
+		    NULL,
+		    SW_SHOW);
+
+	    WindowsDeleteString(RawUri);
+
+	    if (((ULONG) ShellExecuteResult) <= 32) {
+		    return E_FAIL;
+	    }
+
+	    *operation = (IAsyncOperation *) This;
+
+	    return S_OK;
+    };
+
+    STDMETHODIMP_(HRESULT) LaunchUriWithOptionsAsync(
+        _In_    IUriRuntimeClass* uri, 
+        _In_    IUnknown* options,
+        _Out_   IUriRuntimeClass** operation)
+    {
+        return LaunchUriAsync(uri, operation);
+    };
+};
+
+static fakeLauncherStatics1 fbridge_launcherstatics;
+
 namespace YY::Thunks
 {
 #if (YY_Thunks_Target < __WindowsNT6_2)
@@ -177,7 +316,10 @@ namespace YY::Thunks
         {
             *factory = (IGlobalizationPreferencesStatics*)&fbridge_globalization;
         }
-        else return E_NOINTERFACE;
+        else
+        {
+            return E_NOINTERFACE;
+        }
         
         return S_OK;
     }
