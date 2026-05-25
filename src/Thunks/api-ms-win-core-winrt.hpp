@@ -1,5 +1,7 @@
 ﻿#if (YY_Thunks_Target < __WindowsNT6_2)
 #include <roapi.h>
+#include <inspectable.h>
+#include <Activation.h>
 #endif
 
 #if (YY_Thunks_Target < __WindowsNT6_2) && !defined(__Comment_Lib_ole32)
@@ -155,9 +157,29 @@ namespace YY::Thunks
         if (factory)
             *factory = nullptr;
 
-        // According to the C++/WinRT fallback implementation, we should
-        // return CLASS_E_CLASSNOTAVAILABLE.
-        return CLASS_E_CLASSNOTAVAILABLE;
+        if (IsEqualIID(__uuidof(IActivationFactory), iid))
+        {
+            *factory = (IActivationFactory*)&fbridge_factory;
+        }
+        else if (IsEqualIID(__uuidof(ILauncherStatics), iid))
+        {
+            *factory = (ILauncherStatics*)&fbridge_launcherstatics;
+        }
+        else if (IsEqualIID(__uuidof(IUIViewSettings), iid))
+        {
+            *factory = (IUIViewSettings*)&fbridge_uiviewsettings;
+        }
+        else if (IsEqualIID(__uuidof(IUIViewSettingsInterop), iid))
+        {
+            *factory = (IUIViewSettingsInterop*)&fbridge_uiviewsettingsinterop;
+        }
+        else if (IsEqualIID(__uuidof(IGlobalizationPreferencesStatics), iid))
+        {
+            *factory = (IGlobalizationPreferencesStatics*)&fbridge_globalization;
+        }
+        else return E_NOINTERFACE;
+        
+        return S_OK;
     }
 #endif
 
