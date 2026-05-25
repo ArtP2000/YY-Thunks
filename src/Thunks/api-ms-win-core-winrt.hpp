@@ -29,14 +29,16 @@ public:
     {
         if (NULL == ppv)
             return E_POINTER;
+    
         if ((IID_IUnknown == riid)
             || (__uuidof(ILauncherStatics) == riid)
             || (__uuidof(IInspectable) == riid) || (__uuidof(IAgileObject) == riid))
         {
             AddRef();
-            *ppv = (fakeShellBridge1*)(&fbridge1);
+            *ppv = (ILauncherStatics*)(this);
             return S_OK;
         }
+    
         return E_NOINTERFACE;
     };
 
@@ -50,54 +52,55 @@ public:
         return 1; 
     };
 
-    STDMETHODIMP_(HRESULT) GetIids(
+    STDMETHODIMP HRESULT GetIids(
         _Out_ ULONG* iidCount,
         _Out_ IID** iids) 
     {
         IID *Array;
-    	ULONG Count;
-    
-        Count = 1;
-    
+        ULONG Count = 1;
     	Array = (IID *) CoTaskMemAlloc(Count * sizeof(IID));
+        
     	if (!Array) {
     		return E_OUTOFMEMORY;
     	}
-    
-    	*iidCount = Count;
+        
     	Array[0] = __uuidof(ILauncherStatics);
+        
+    	*iidCount = Count;
+        *iids = Array;
     
     	return S_OK;
     };
 
-    STDMETHODIMP_(HRESULT) GetRuntimeClassName(
+    STDMETHODIMP HRESULT GetRuntimeClassName(
         _Out_ HSTRING* className)
     {
         PCWSTR Name = L"Windows.System.Launcher";
         return WindowsCreateString(Name, (ULONG) wcslen(Name), className);
     };
 
-    STDMETHODIMP_(HRESULT) GetTrustLevel(
+    STDMETHODIMP HRESULT GetTrustLevel(
         _Out_ TrustLevel* trustLevel) 
     {
         *trustLevel = BaseTrust;
         return S_OK;
     };
 
-    STDMETHODIMP_(HRESULT) TreatAsUntrusted(
+    STDMETHODIMP HRESULT TreatAsUntrusted(
         boolean* value)
     {
-        return 7;
+        *value = FALSE;
+        return S_OK;
     };
 
-    STDMETHODIMP_(HRESULT) LaunchFileAsync(
+    STDMETHODIMP HRESULT LaunchFileAsync(
         _In_ IUnknown* file, 
         _Out_ IAsyncOperation** operation)
     {
         return E_NOTIMPL;
     };
 
-    STDMETHODIMP_(HRESULT) LaunchFileWithOptionsAsync(
+    STDMETHODIMP HRESULT LaunchFileWithOptionsAsync(
         _In_ IUnknown* file, 
         _In_ IUnknown* options, 
         _Out_ IAsyncOperation** operation)
@@ -105,7 +108,7 @@ public:
         return LaunchFileAsync(file, operation);
     };
 
-    STDMETHODIMP_(HRESULT) LaunchUriAsync(
+    STDMETHODIMP HRESULT LaunchUriAsync(
         _In_    IUriRuntimeClass*   uri, 
         _Out_   IAsyncOperation**   operation)
     {
@@ -113,7 +116,7 @@ public:
 	    HSTRING RawUri;
 	    HINSTANCE ShellExecuteResult;
         
-        Result = Uri->lpVtbl->get_AbsoluteUri(uri, &RawUri);
+        Result = uri->lpVtbl->get_AbsoluteUri(uri, &RawUri);
 	    if (FAILED(Result)) {
 		    return Result;
 	    }
@@ -132,15 +135,15 @@ public:
 		    return E_FAIL;
 	    }
 
-	    *operation = (IAsyncOperation *) This;
+	    *operation = nullptr;
 
 	    return S_OK;
     };
 
-    STDMETHODIMP_(HRESULT) LaunchUriWithOptionsAsync(
+    STDMETHODIMP HRESULT LaunchUriWithOptionsAsync(
         _In_    IUriRuntimeClass* uri, 
         _In_    IUnknown* options,
-        _Out_   IUriRuntimeClass** operation)
+        _Out_   IAsyncOperation** operation)
     {
         return LaunchUriAsync(uri, operation);
     };
